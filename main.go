@@ -13,9 +13,14 @@ var (
     errorLogger = log.New(os.Stderr, "[error] ", log.LstdFlags|log.Lshortfile)
 )
 
+var siteUrl = os.Getenv("SITEURL")
+
 func main() {
+    if siteUrl == "" {
+        siteUrl = "http://localhost:8081/"
+    }
     store := storage.NewStore()
-    handler := handlers.NewHandler(store)
+    handler := handlers.NewHandler(store, siteUrl, infoLogger)
 
     http.HandleFunc("GET /", handler.RedirectURL)
     http.HandleFunc("POST /shorten", handler.ShortenURL)

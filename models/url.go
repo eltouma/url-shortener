@@ -7,21 +7,21 @@ import (
     "url-shortener/storage"
 )
 
-// generate random short url and check if it already exists to avoid collision
+// generate random short url of length 6 and check if it already exists to avoid collision
 func GenerateShortURL(store *storage.Store) string {
     b := make([]byte, 6)
     _, err := rand.Read(b)
     if err != nil {
-        log.Fatalf("Failed to generate random characters: %v", err)
+        log.Fatalf("Failed to generate random url: %v", err)
     }
-    shortURL := base64.URLEncoding.EncodeToString(b)[:6]
-    if !store.Exists(shortURL) {
-        return shortURL
+    shortUrl := base64.URLEncoding.EncodeToString(b)[:6]
+    if !store.Exists(shortUrl) {
+        return shortUrl
     }
     return GenerateShortURL(store)
 }
 
-// Remplacer la récursivité par un for : plus idiomatique, plus robuste, plus simple à maintenir
+// Replacing recursion with a for loop: more idiomatic, more robust, simpler to maintain
 /*
 func GenerateShortURL(store *storage.Store) string {
     for {

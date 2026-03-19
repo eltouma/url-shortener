@@ -17,23 +17,23 @@ func NewStore() *Store {
     }
 }
 
-func (s *Store) Save(shortURL, longURL string) {
+func (s *Store) Save(shortUrl, longUrl string) {
     s.mu.Lock()
     defer s.mu.Unlock()
-    s.urls[shortURL] = longURL
+    s.urls[shortUrl] = longUrl
 }
 
-func (s *Store) Get(shortURL string) (string, bool) {
+func (s *Store) Get(shortUrl string) (string, bool) {
     s.mu.RLock()
     defer s.mu.RUnlock()
-    longURL, exists := s.urls[shortURL]
-    return longURL, exists
+    longUrl, exists := s.urls[shortUrl]
+    return longUrl, exists
 }
 
-// verify if shortURL already exists in memory
-func (s *Store) Exists(shortURL string) bool {
+// verify if shortUrl already exists in memory
+func (s *Store) Exists(shortUrl string) bool {
     s.mu.RLock()
     defer s.mu.RUnlock()
-    _, ok := s.urls[shortURL]
+    _, ok := s.urls[shortUrl]
     return ok
 }

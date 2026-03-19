@@ -1,75 +1,88 @@
 package handlers
 
 import (
-    "fmt"
     "net/http"
+    "net/url"
+    "log"
     "url-shortener/models"
     "url-shortener/storage"
-    "os"
-//    "regexp"
 )
 
 type Handler struct {
     store *storage.Store
+    siteUrl string
+    infoLogger *log.Logger
 }
 
-func NewHandler(store *storage.Store) *Handler {
-    return &Handler{store: store}
+func NewHandler(store *storage.Store, siteUrl string, infoLogger *log.Logger) *Handler {
+    return &Handler{
+        store: store,
+        siteUrl: siteUrl,
+        infoLogger: infoLogger,
+    }
 }
 
-var siteUrl = os.Getenv("SITEURL")
+func isValidURL(longUrl string) bool {
+    parsedUrl, err := url.ParseRequestURI(longUrl)
+    if err != nil {
+        return false
+    }
+    if parsedUrl.Scheme != "http" && parsedUrl.Scheme != "https" {
+        return false
+    }
+    if parsedUrl.Host == "" {
+        return false
+    }
+    return true
+}
 
 func (h *Handler) ShortenURL(w http.ResponseWriter, r *http.Request) {
-    if siteUrl == "" {
-        siteUrl = "http://localhost:8081/"
-    }
-    fmt.Println(r)
-    fmt.Println(r.Method)
-    // à modifier, voir le repo 1
-    if r.Method != http.MethodPost {
-        http.Error(w, "Method Not Allowed...", http.StatusMethodNotAllowed)
+    if r.Method != "POST" {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
         return
     }
-    w.Header().Set("Content-Type", "application/json")
-
-    r.ParseForm()
-    fmt.Println(r)
-    longURL := r.FormValue("url")
-    fmt.Println("\n")
-    fmt.Println(longURL)
-    if longURL == "" {
-        http.Error(w, "missing 'url' parameter", http.StatusBadRequest)
+    if err := r.ParseForm(); err != nil {
+        http.Error(w, "Error parsing form", http.StatusBadRequest)
         return
     }
 
-    shortURL := models.GenerateShortURL(h.store)
-    h.store.Save(shortURL, longURL)
+    w.Header().Set("Content-Type", "text/plain")
+    longUrl := r.FormValue("url")
+    if longUrl == "" {
+        http.Error(w, "Missing 'url' parameter", http.StatusBadRequest)
+        return
+    }
+    if !isValidURL(longUrl) {
+        http.Error(w, "Invalid 'url' parameter", http.StatusBadRequest)
+        return
+    }
+
+    shortUrl := models.GenerateShortURL(h.store)
+    h.store.Save(shortUrl, longUrl)
 
     w.WriteHeader(http.StatusCreated)
-
-    // carriage return is necessary otherwise shortURL ends by % and redirect to a 404
-    w.Write([]byte(siteUrl + shortURL + "\n"))
+    // add a new line for terminal output when using curl
+    w.Write([]byte(h.siteUrl + shortUrl + "\n"))
 }
 
 func (h *Handler) RedirectURL(w http.ResponseWriter, r *http.Request) {
-    /*
-    getPage := false
-    if r.URL.Path == "/get" {
-        getPage = true
-    }
-    */
-    if r.Method != http.MethodGet {
-        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+    if r.Method != "GET" {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
         return
     }
-    shortURL := r.URL.Path[1:]
-    fmt.Println("shotURL:", shortURL)
+    if r.URL.Path == "/" {
+        w.WriteHeader(http.StatusOK)
+        w.Write([]byte("Home page\n"))
+        h.infoLogger.Println("GET /")
+        return
+    }
 
-    longURL, exists := h.store.Get(shortURL)
+    shortUrl := r.URL.Path[1:]
+    longUrl, exists := h.store.Get(shortUrl)
     if !exists {
         http.NotFound(w, r)
         return
     }
-
-    http.Redirect(w, r, longURL, http.StatusFound)
+    h.infoLogger.Println("GET", h.siteUrl + shortUrl, "redirect to ", longUrl)
+    http.Redirect(w, r, longUrl, http.StatusFound)
 }

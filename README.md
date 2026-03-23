@@ -20,16 +20,26 @@ Easily convert a long URL into short URL.
 
 
 ## Run locally ##
+By default, the server runs on: `http://localhost:8081`<br>
+You can configure the base URL with the `SITEURL` environment variable
+```bash
+export SITEURL=http://your_own_site
+```
+
+
 clone the repository, then start the server:
 ```bash 
 go run main.go
 ```
 
-By default, the server runs on `http://localhost:8081`
-You can configure the base URL with the `SITEURL` environment variable
-
-
+In another terminal window, create a short URL from a long one
 ```bash
-curl -X  POST -d "url=http://example.com/your_very_long_url" http://localhost:8081
+curl -X  POST -d "url=http://example.com/some_very_long_url" http://localhost:8081
+```
+Response
+```bash
+http://localhost/8081/short_url
 ```
 
+## Limitation ##
+Since it's in-memory storage only, data is lost when the server stops.

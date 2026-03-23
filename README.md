@@ -23,7 +23,7 @@ Easily convert a long URL into short URL.
 By default, the server runs on: `http://localhost:8081`<br>
 You can configure the base URL with the `SITEURL` environment variable
 ```bash
-export SITEURL=http://your_own_site
+export SITEURL=your_own_site_with_http
 ```
 
 

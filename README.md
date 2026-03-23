@@ -1,4 +1,4 @@
-## URL SHORTENER ##
+# URL SHORTENER
 Easily convert a long URL into short URL.
 
 
@@ -34,12 +34,13 @@ go run main.go
 
 In another terminal window, create a short URL from a long one
 ```bash
-curl -X  POST -d "url=http://example.com/some_very_long_url" http://localhost:8081
+curl -X  POST -d "url=http://example.com/some_very_long_url" http://localhost:8081/shorten
 ```
 Response
 ```bash
-http://localhost/8081/short_url
+http://localhost:8081/short_url
 ```
 
-## Limitation ##
-Since it's in-memory storage only, data is lost when the server stops.
+## Limitations ##
+- in-memory storage only
+- data is lost when the server stops
